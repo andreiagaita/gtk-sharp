@@ -404,7 +404,7 @@ namespace GtkSharp.Generation {
 	
 			foreach (string key in dir_info.objects.Keys) {
 				if (GetExpected(key) != ((string) dir_info.objects[key]))
-					sw.WriteLine ("\t\t\tGLib.GType.Register ({0}.GType, typeof ({0}));", dir_info.objects [key]);
+					sw.WriteLine ("\t\t\tGLib.GType.Register ({0}.GType, typeof ({0}), \"{1}\");", dir_info.objects [key], key);
 			}
 					
 			sw.WriteLine ("\t\t}");

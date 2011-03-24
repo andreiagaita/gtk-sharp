@@ -90,14 +90,17 @@ namespace GLib {
 
 		static Hashtable types = new Hashtable ();
 		static Hashtable gtypes = new Hashtable ();
+		static Hashtable stypes = new Hashtable ();
 
-		public static void Register (GType native_type, System.Type type)
+		public static void Register (GType native_type, System.Type type, string cname = "")
 		{
 			lock (types) {
 				if (native_type != GType.Pointer && native_type != GType.Boxed && native_type != ManagedValue.GType)
 					types[native_type.Val] = type;
 				if (type != null)
 					gtypes[type] = native_type;
+				if (cname != null && cname != "")
+					stypes[cname] = type;
 			}
 		}
 
@@ -191,6 +194,15 @@ namespace GLib {
 			}
 
 			string native_name = Marshaller.Utf8PtrToString (g_type_name (typeid));
+			Type result = null;
+			lock (stypes) {
+				if (stypes.Contains (native_name))
+					result = (Type)stypes[native_name];
+			}
+			if (result != null) {
+				Register (new GType (typeid), result);
+				return result;
+			}
 
 			if (ResolveType != null) {
 				GLib.GType gt = new GLib.GType (typeid);
@@ -209,7 +221,7 @@ namespace GLib {
 			string type_name = GetQualifiedName (native_name);
 			if (type_name == null)
 				return null;
-			Type result = null;
+
 			Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
 			foreach (Assembly asm in assemblies) {
 				result = asm.GetType (type_name);
